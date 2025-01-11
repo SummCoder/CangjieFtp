@@ -23,6 +23,8 @@ def main():
     authorizer = CustomAuthorizer()  
     handler = FTPHandler  
     handler.authorizer = authorizer  
+
+    # 允许被动模式，端口范围为2000-2332
     handler.passive_ports = range(2000, 2333)
 
     # 确保 FTP 数据目录存在  
