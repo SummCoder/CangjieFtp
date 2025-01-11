@@ -80,17 +80,37 @@ class CustomAuthorizer(DummyAuthorizer):
         super().__init__()  
         # 匿名用户（主目录）  
         self.add_anonymous('/ftp_data/user1')  
+        hash_ = hashlib.md5('123456'.encode('latin1')).hexdigest()
         # user1 用户（主目录）  
-        self.add_user("user1", "123456", homedir='/ftp_data', perm='elr')  
+        self.add_user("user1", hash_, homedir='/ftp_data', perm='elr')  
         # user2 用户（主目录）  
-        self.add_user("user2", "123456", homedir='/ftp_data/user2', perm='elradfmwMT')  
+        self.add_user("user2", hash_, homedir='/ftp_data/user2', perm='elradfmwMT')  
         # user1 可以查看user2的文件
         self.override_perm("user1", "/ftp_data/user1", perm='elradfmwMT', recursive=True)
+
+    # 采用md5加密用户名和密码
+    def validate_authentication(self, username, password, handler):
+        if username != "anonymous":
+            hash_ = hashlib.md5(password.encode('latin1')).hexdigest()
+            try:
+                if self.user_table[username]['pwd'] != hash_:
+                    raise KeyError
+            except KeyError:
+                raise AuthenticationFailed
 ```
 
 以上代码片段展示了如何配置匿名用户和两个普通用户的权限。其中，`DummyAuthorizer`类用于自定义授权器，通过继承并重写其方法来实现特定的访问控制逻辑。
 
 我们为不同用户设置了不同的权限，例如匿名用户只能查看并下载`user1`上传的文件，而`user1`可以查看自己的文件以及`user2`的公开文件。通过这种方式使得FTP服务器能够满足基本的权限管理需求。
+
+同时，为了保证用户名和密码在建立连接过程中的安全性，我们也采用了md5进行用户名和密码的加密工作。
+
+```python
+# 添加日志管理功能
+logging.basicConfig(filename='/var/log/pyftpd.log', level=logging.INFO)
+```
+
+为了便于排查异常，我们将日志重定向到指定文件之中。
 
 ## 9. 测试
 
