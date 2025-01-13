@@ -109,7 +109,7 @@ void serverMessageHandler(int fd,struct Message msg){
 		char *dir=getLocalDir(msg.cmd);
 		printf("local fileName:%s\n",dir);
 		int newFilefd=open(dir,O_RDWR|O_CREAT,0600);
-		write(newFilefd,recMsg.cmd,strlen(recMsg.cmd));
+		write(newFilefd,recMsg.contentBuf,strlen(recMsg.contentBuf));
 		putchar('>');
 		fflush(stdout);
 	} else{
@@ -180,6 +180,7 @@ int main(int argc,char **argv){
 				fflush(stdout);	
 				continue;
 			}
+			// printf("%d", msg.fileFlag);
 	        serverMessageHandler(c_fd, msg);
 		
 		}

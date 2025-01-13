@@ -139,8 +139,7 @@ func messageHandler(buf: Array<Byte>, client: TcpSocket) {
                 file.seek(SeekPosition.Begin(0))
                 file.read(dataBuf)
                 file.close()
-                msg.contentBuf = dataBuf
-                client.write(msg.toString().toArray())
+                client.write((String.fromUtf8(msg.fileFlag) + String.fromUtf8(msg.cmd) + String.fromUtf8(dataBuf)).toArray())
             } else {
                 client.write("0file does not exist!\0".toArray())
             }
