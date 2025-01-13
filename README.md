@@ -3,9 +3,9 @@
 目录结构：
 - cangjie-ftp：使用仓颉编程语言开发的ftp服务端
     - 已完成：
-        - ls、cd、pwd、quit、get
+        - ls、cd、pwd、quit、get、put
     - 未完成：
-        - put、权限控制
+        - 权限控制
 - python-ftp：使用python开发的ftp服务器，已完成
 - client：与cangjie-ftp配套的客户端程序，采用C语言编写
 
@@ -91,3 +91,59 @@ client.write(("0" + path + '\0').toArray())
 
 文件内容也被正确传输下载下来
 
+核心代码：
+
+```cangjie
+// 首先判断文件是否存在
+let path: Path = Path(getDestDir(String(cmd)))
+println(path)
+let exists = File.exists(path)
+if (exists) {
+    // 文件存在，读取文件到dataBuf中
+    let dataBuf = Array<Byte>(4096, item: 0)
+    msg.fileFlag = 1
+    // 以只读模式打开文件
+    var file: File = File(path, OpenOption.Open(true, false))
+    file.seek(SeekPosition.Begin(0))
+    file.read(dataBuf)
+    file.close()
+    client.write((String.fromUtf8(msg.fileFlag) + String.fromUtf8(msg.cmd) + String.fromUtf8(dataBuf)).toArray())
+} else {
+    client.write("0file does not exist!\0".toArray())
+}
+```
+
+主要逻辑就是首先判断文件是否存在，将其写入`socket`，客户端在另一端接收到数据后解析创建并写入本地文件即可。
+
+### put
+
+`put`用以上传文件到服务器
+
+![](./asset/put.png)
+
+查看效果：
+
+![](./asset/put2.png)
+
+相关文件`client.c`已被上传到服务器。
+
+核心代码：
+
+```cangjie
+// 首先判断文件是否存在
+let path = getDestDir(String(cmd))
+let exists = File.exists(path)
+if (exists) {
+    // 文件存在，先将其删除
+    File.delete(path)
+}
+var file: File = File(path, OpenOption.Create(false))
+if (File.exists(path)) {
+    println("The file ${path} is created successfully in current directory.\n")
+}
+let bytes: Array<Byte> = msg.contentBuf
+file.write(bytes)
+file.close()
+```
+
+基本逻辑为首先判断文件是否存在，存在则将其删除，之后读取连接管道中的客户端传送来的文件数据并将其在服务器端创建文件并写入内容即可。
