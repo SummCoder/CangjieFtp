@@ -3,9 +3,9 @@
 目录结构：
 - cangjie-ftp：使用仓颉编程语言开发的ftp服务端
     - 已完成：
-        - ls、cd、pwd、quit、get、put
+        - ls、cd、pwd、quit、get、put、权限控制
     - 未完成：
-        - 权限控制、并发
+        - 并发
 - python-ftp：使用python开发的ftp服务器，已**全部**完成
 - client：与cangjie-ftp配套的客户端程序，采用C语言编写
 

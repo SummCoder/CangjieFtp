@@ -33,6 +33,40 @@ struct User {
         this.username = username
         this.password = password
     }  
+    // 用以根据用户名设置工作目录，请确保下面几个目录存在于计算机上
+    public func setDir() {
+        if (username == "user1") {
+            chdir("/ftp_data")
+        } else if (username == "user2") {
+            chdir("/ftp_data/user2")
+        } else {
+            chdir("/ftp_data/user1")
+        }
+    }
+
+    // 用户查看下载权限控制
+    public func download() {
+        // 进行用户权限的判断
+        if (username == "anonymous" && !currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user1")) {
+            // 匿名用户无权查看user2目录下内容
+            return false
+        } else if (username == "user2" && !currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user2")) {
+            // user2无权查看这些目录下的文件
+            return false
+        }
+        return true
+    }
+
+    // 用户上传权限控制
+    public func upload() {
+        if (username == "user1" && currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user1")) {
+            return true
+        } else if (username == "user2" && currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user2")) {
+            // user2无权查看这些目录下的文件
+            return true
+        }
+        return false
+    }
 }  
 
 
@@ -90,7 +124,7 @@ func getDestDir(cmd: String) {
 }
 
 // 服务端处理接收到的消息，核心代码
-func messageHandler(buf: Array<Byte>, client: TcpSocket) {
+func messageHandler(buf: Array<Byte>, client: TcpSocket, user: User) {
     // 解析指令类型
     var msg = Trans()
     // println(buf)
@@ -109,12 +143,18 @@ func messageHandler(buf: Array<Byte>, client: TcpSocket) {
     // 依据类型执行不同操作
     match (commandType) {
         case Message.LS =>
-            let info = currentDir().fileList()
-            var files: String = ""
-            for (file in info) {
-                files += file.path.fileName.toString() + "\n"
+            // 进行用户权限的判断
+            if (!user.download()) {
+                client.write("0Pemission denied!\0".toArray())
+            } else {
+                // 获取该目录下的文件并将其拼接返回
+                let info = currentDir().fileList()
+                var files: String = ""
+                for (file in info) {
+                    files += file.path.fileName.toString() + "\n"
+                }
+                client.write(("0" + files + '\0').toArray())
             }
-            client.write(("0" + files + '\0').toArray())
         case Message.PWD => 
             // 获取当前路径
             let path = currentDir().info.path.toString()
@@ -126,38 +166,49 @@ func messageHandler(buf: Array<Byte>, client: TcpSocket) {
             client.write(("0change the dictory" + "\0").toArray())     
         case Message.Error => client.write(("0Command undefined!" + "\0").toArray())
         case Message.GET => 
-            // 首先判断文件是否存在
-            let path: Path = Path(getDestDir(String(cmd)))
-            println(path)
-            let exists = File.exists(path)
-            if (exists) {
-                // 文件存在，读取文件到dataBuf中
-                let dataBuf = Array<Byte>(4096, item: 0)
-                msg.fileFlag = 1
-                // 以只读模式打开文件
-                var file: File = File(path, OpenOption.Open(true, false))
-                file.seek(SeekPosition.Begin(0))
-                file.read(dataBuf)
-                file.close()
-                client.write((String.fromUtf8(msg.fileFlag) + String.fromUtf8(msg.cmd) + String.fromUtf8(dataBuf)).toArray())
+            // 判断是否拥有下载的权限
+            if (!user.download()) {
+                client.write("0Pemission denied!\0".toArray())
             } else {
-                client.write("0file does not exist!\0".toArray())
+                // 判断文件是否存在
+                let path: Path = Path(getDestDir(String(cmd)))
+                println(path)
+                let exists = File.exists(path)
+                if (exists) {
+                    // 文件存在，读取文件到dataBuf中
+                    let dataBuf = Array<Byte>(4096, item: 0)
+                    msg.fileFlag = 1
+                    // 以只读模式打开文件
+                    var file: File = File(path, OpenOption.Open(true, false))
+                    file.seek(SeekPosition.Begin(0))
+                    file.read(dataBuf)
+                    file.close()
+                    client.write((String.fromUtf8(msg.fileFlag) + String.fromUtf8(msg.cmd) + String.fromUtf8(dataBuf)).toArray())
+                } else {
+                    client.write("0file does not exist!\0".toArray())
+                }
             }
         case Message.PUT => 
-            // 首先判断文件是否存在
-            let path = getDestDir(String(cmd))
-            let exists = File.exists(path)
-            if (exists) {
-                // 文件存在，先将其删除
-                File.delete(path)
+            // 判断是否有上传的权限
+            if (!user.upload()) {
+                client.write("0Pemission denied!\0".toArray())
+            } else {
+                // 判断文件是否存在
+                let path = getDestDir(String(cmd))
+                let exists = File.exists(path)
+                if (exists) {
+                    // 文件存在，先将其删除
+                    File.delete(path)
+                }
+                var file: File = File(path, OpenOption.Create(false))
+                if (File.exists(path)) {
+                    println("The file ${path} is created successfully in current directory.\n")
+                }
+                let bytes: Array<Byte> = msg.contentBuf
+                file.write(bytes)
+                file.close()               
             }
-            var file: File = File(path, OpenOption.Create(false))
-            if (File.exists(path)) {
-                println("The file ${path} is created successfully in current directory.\n")
-            }
-            let bytes: Array<Byte> = msg.contentBuf
-            file.write(bytes)
-            file.close()
+
         case Message.QUIT => println("Disconnect")
     }
 }
@@ -171,17 +222,44 @@ main() {
             try (client = serverSocket.accept()) {
                 println("Server has established a connect with:" + client.remoteAddress.toString())
 
+                var user: User = User("anonymous", "")
+
                 while(true) {
                     let buf = Array<Byte>(5121, item: 0)
-                    let count = client.read(buf)
-                    println("Server read ${count} bytes")
-                    if (count == 0) {
-                        // 读取结果为0字节，表示客户端已经中止连接
+                    try {
+                        let count = client.read(buf)
+                        println("Server read ${count} bytes")
+                        if (count == 0) {
+                            // 读取结果为0字节，表示客户端已经中止连接
+                            println("client disconnected!")
+                            break
+                        } 
+                        if (count == 64) {
+                            // 处理登录信息，进行身份验证
+                            var tmpData = Array<Byte>(32, item: 0)
+                            buf.copyTo(tmpData, 0, 0, 32)
+                            let username = String.fromUtf8(tmpData).split("\0")[0]
+                            buf.copyTo(tmpData, 32, 0, 32)
+                            let password = String.fromUtf8(tmpData).split("\0")[0]
+                            // 身份验证
+                            if ((username == "user1" && password == "123456") || (username == "user2" && password == "123456") || (username == "anonymous")) {
+                                user = User(username, password)
+                                client.write("0connect successfully!\0".toArray())
+                                user.setDir()
+                            } else {
+                                println("client disconnected!")
+                                break
+                            }
+                        } else {
+                            // 否则表示存在信息，进行处理
+                            messageHandler(buf, client, user)
+                        }
+                    } catch (e: Exception) {
+                        // 出现异常则断开连接
                         println("client disconnected!")
                         break
-                    } 
-                    // 否则表示存在信息，进行处理
-                    messageHandler(buf, client)
+                    }
+
                 }
             }
         }
