@@ -5,8 +5,8 @@
     - 已完成：
         - ls、cd、pwd、quit、get、put
     - 未完成：
-        - 权限控制
-- python-ftp：使用python开发的ftp服务器，已完成
+        - 权限控制、并发
+- python-ftp：使用python开发的ftp服务器，已**全部**完成
 - client：与cangjie-ftp配套的客户端程序，采用C语言编写
 
 注：
@@ -22,6 +22,67 @@ python-ftp的介绍请参考 `python-ftp` 目录下的 `README` 或者 `作品�
 ## 仓颉FTP服务器
 
 我们使用仓颉编程语言实现了FTP常见的几个命令工具，`ls`、`pwd`、`cd`、`get`以及`put`
+
+### 运行ftp服务器
+
+`cangjie-ftp`目录下已经提供脚本安装`cangjie`工具链，请注意使用`source run-ftp.sh`运行脚本，否则将导致环境变量设置无法生效。
+
+```bash
+#!/bin/bash  
+
+# 定义下载地址和文件名  
+DOWNLOAD_URL="https://cangjie-lang.cn/v1/files/auth/downLoad?nsId=142267&fileName=Cangjie-0.53.13-linux_x64.tar.gz&objectKey=6719f1eb3af6947e3c6af327"  
+FILE_NAME="Cangjie-0.53.13-linux_x64.tar.gz"
+
+# 检查 cangjie 工具链是否已安装
+
+echo "确保 cangjie 工具链已安装..."  
+if ! command -v cjc -v &> /dev/null  
+then  
+    echo "cangjie工具链 未安装，尝试进行安装..."  
+    # 下载文件  
+    echo "Downloading Cangjie compiler..."  
+    curl -L -o "$FILE_NAME" "$DOWNLOAD_URL"
+
+    # 检查下载是否成功  
+    if [ $? -eq 0 ]; then  
+        echo "Download completed successfully."  
+    else  
+        echo "Download failed."  
+        exit 1  
+    fi
+
+    # 解压文件  
+    echo "Extracting $FILE_NAME..."  
+    tar -xvf "$FILE_NAME"  
+
+    # 检查解压是否成功  
+    if [ $? -eq 0 ]; then  
+        echo "Extraction completed successfully."  
+    else  
+        echo "Extraction failed."  
+        exit 1  
+    fi
+
+    # 检查 envsetup.sh 是否存在并进行 source  
+    if [[ -f "cangjie/envsetup.sh" ]]; then
+    	echo "envsetup.sh found!"  
+        source cangjie/envsetup.sh  
+    else  
+        echo "envsetup.sh not found!"  
+        exit 1  
+    fi
+
+fi
+
+# 编译ftp_server
+cjc ftp_server.cj -o ftp_server
+
+echo "正在启动ftp服务器..."
+
+# 启动执行
+./ftp_server
+```
 
 ### ls
 
