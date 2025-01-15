@@ -224,12 +224,12 @@ int main(int argc, char **argv)
 		gets(msg.cmd);
 		int commandType = commandHandler(msg, c_fd);
 		printf("count=%d\n", count);
-		if (commandType > QUIT)
-		{
-			putchar('>');
-			fflush(stdout);
-			continue;
-		}
+		// if (commandType > CD)
+		// {
+		// 	putchar('>');
+		// 	fflush(stdout);
+		// 	continue;
+		// }
 		if (commandType == -1)
 		{
 			puts("command not found");

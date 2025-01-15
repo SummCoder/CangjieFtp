@@ -208,3 +208,70 @@ file.close()
 ```
 
 基本逻辑为首先判断文件是否存在，存在则将其删除，之后读取连接管道中的客户端传送来的文件数据并将其在服务器端创建文件并写入内容即可。
+
+### 权限控制
+
+![](./asset/control1.png)
+
+客户端匿名用户登录无需用户名和密码参数，否则需要提供用户名和密码作为参数。
+
+以user2为例
+
+![](./asset/control2.png)
+
+user2目录下可进行上传操作。
+
+![](./asset/control3.png)
+
+切换目录到user1下，发现既不可以查看也不可以下载上传，操作受限。
+
+核心代码：
+
+```cangjie
+// 用以权限验证的类
+struct User {  
+    var username: String  
+    var password: String
+
+    public init(username:String, password:String) {
+        this.username = username
+        this.password = password
+    }  
+    // 用以根据用户名设置工作目录，请确保下面几个目录存在于计算机上
+    public func setDir() {
+        if (username == "user1") {
+            chdir("/ftp_data")
+        } else if (username == "user2") {
+            chdir("/ftp_data/user2")
+        } else {
+            chdir("/ftp_data/user1")
+        }
+    }
+
+    // 用户查看下载权限控制
+    public func download() {
+        // 进行用户权限的判断
+        if (username == "anonymous" && !currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user1")) {
+            // 匿名用户无权查看user2目录下内容
+            return false
+        } else if (username == "user2" && !currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user2")) {
+            // user2无权查看这些目录下的文件
+            return false
+        }
+        return true
+    }
+
+    // 用户上传权限控制
+    public func upload() {
+        if (username == "user1" && currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user1")) {
+            return true
+        } else if (username == "user2" && currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user2")) {
+            // user2无权查看这些目录下的文件
+            return true
+        }
+        return false
+    }
+}  
+```
+
+使用结构体并在其中定义用户上传以及下载的权限控制方法，具体实现为获取绝对路径，判断是否对该路径下的文件具有相应权限。

@@ -206,7 +206,8 @@ func messageHandler(buf: Array<Byte>, client: TcpSocket, user: User) {
                 }
                 let bytes: Array<Byte> = msg.contentBuf
                 file.write(bytes)
-                file.close()               
+                file.close()
+                client.write("0file upload successfully!\0".toArray())               
             }
 
         case Message.QUIT => println("Disconnect")
