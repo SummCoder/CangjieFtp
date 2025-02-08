@@ -25,7 +25,7 @@ python-ftp的介绍请参考 `python-ftp` 目录下的 `README` 或者 `作品�
 
 ### 运行ftp服务器
 
-`cangjie-ftp`目录下已经提供脚本安装`cangjie`工具链，请注意使用`source run-ftp.sh`运行脚本，否则将导致环境变量设置无法生效。
+根目录以及`cangjie-ftp`目录下都已经提供脚本安装`cangjie`工具链，请注意使用`source run-ftp.sh`运行脚本，否则将导致环境变量设置无法生效。
 
 ```bash
 #!/bin/bash  
@@ -75,8 +75,23 @@ then
 
 fi
 
+# 检查 /ftp_data 目录以及 user1 和 user2 子目录
+echo "检查 /ftp_data 目录及子目录..."
+if [ ! -d "/ftp_data" ]; then
+    echo "/ftp_data 目录不存在，正在创建..."
+    mkdir -p /ftp_data
+fi
+
+# 检查 user1 和 user2 子目录
+for dir in user1 user2; do
+    if [ ! -d "/ftp_data/$dir" ]; then
+        echo "/ftp_data/$dir 目录不存在，正在创建..."
+        mkdir "/ftp_data/$dir"
+    fi
+done
+
 # 编译ftp_server
-cjc ftp_server.cj -o ftp_server
+cjc ./cangjie-ftp/ftp_server.cj -o ftp_server
 
 echo "正在启动ftp服务器..."
 
