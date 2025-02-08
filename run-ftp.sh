@@ -45,6 +45,21 @@ then
 
 fi
 
+# 检查 /ftp_data 目录以及 user1 和 user2 子目录
+echo "检查 /ftp_data 目录及子目录..."
+if [ ! -d "/ftp_data" ]; then
+    echo "/ftp_data 目录不存在，正在创建..."
+    mkdir -p /ftp_data
+fi
+
+# 检查 user1 和 user2 子目录
+for dir in user1 user2; do
+    if [ ! -d "/ftp_data/$dir" ]; then
+        echo "/ftp_data/$dir 目录不存在，正在创建..."
+        mkdir "/ftp_data/$dir"
+    fi
+done
+
 # 编译ftp_server
 cjc ./cangjie-ftp/ftp_server.cj -o ftp_server
 
