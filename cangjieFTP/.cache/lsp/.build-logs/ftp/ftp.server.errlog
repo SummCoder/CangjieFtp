@@ -1,0 +1,77 @@
+[33mwarning[0m: unused variable:'connection'
+ [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\listener.cj:5:29:
+  [36m| [0m
+[36m5[0m [36m| [0m    public func onConnected(connection: FTPConnection) {[0m
+  [36m| [0m                            [33m^^^^^^^^^^ unused variable[0m
+  [36m| [0m
+  [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused variable:'server'
+ [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\connect.cj:8:17:
+  [36m| [0m
+[36m8[0m [36m| [0m    public init(server: FTPServer, client: TcpSocket, timeout: UInt32, bufferSize: UInt32)  {[0m
+  [36m| [0m                [33m^^^^^^ unused variable[0m
+  [36m| [0m
+  [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused variable:'client'
+ [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\connect.cj:8:36:
+  [36m| [0m
+[36m8[0m [36m| [0m    public init(server: FTPServer, client: TcpSocket, timeout: UInt32, bufferSize: UInt32)  {[0m
+  [36m| [0m                                   [33m^^^^^^ unused variable[0m
+  [36m| [0m
+  [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused variable:'timeout'
+ [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\connect.cj:8:55:
+  [36m| [0m
+[36m8[0m [36m| [0m    public init(server: FTPServer, client: TcpSocket, timeout: UInt32, bufferSize: UInt32)  {[0m
+  [36m| [0m                                                      [33m^^^^^^^ unused variable[0m
+  [36m| [0m
+  [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused variable:'bufferSize'
+ [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\connect.cj:8:72:
+  [36m| [0m
+[36m8[0m [36m| [0m    public init(server: FTPServer, client: TcpSocket, timeout: UInt32, bufferSize: UInt32)  {[0m
+  [36m| [0m                                                                       [33m^^^^^^^^^^ unused variable[0m
+  [36m| [0m
+  [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused variable:'connection'
+ [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\listener.cj:9:32:
+  [36m| [0m
+[36m9[0m [36m| [0m    public func onDisconnected(connection: FTPConnection) {[0m
+  [36m| [0m                               [33m^^^^^^^^^^ unused variable[0m
+  [36m| [0m
+  [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused variable:'code'
+  [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\connect.cj:12:30:
+   [36m| [0m
+[36m12[0m [36m| [0m    public func sendResponse(code: Int32, response: String) {[0m
+   [36m| [0m                             [33m^^^^ unused variable[0m
+   [36m| [0m
+   [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused variable:'response'
+  [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\connect.cj:12:43:
+   [36m| [0m
+[36m12[0m [36m| [0m    public func sendResponse(code: Int32, response: String) {[0m
+   [36m| [0m                                          [33m^^^^^^^^ unused variable[0m
+   [36m| [0m
+   [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused function:'removeConnection'
+   [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\server.cj:114:5:
+    [36m| [0m
+[36m114[0m [36m| [0m      private func removeConnection(connection: FTPConnection) {[0m
+    [36m| [0m [33m_[0m[33m____^[0m
+[36m115[0m [36m| [0m[33m|[0m         synchronized(mtxListener) {[0m
+    [36m| [0m[33m|[0m ...[0m
+[36m130[0m [36m| [0m[33m|[0m     }[0m
+    [36m| [0m[33m|[0m[33m_[0m[33m____^ unused function[0m
+    [36m| [0m
+    [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+9 warnings generated, 9 warnings printed.

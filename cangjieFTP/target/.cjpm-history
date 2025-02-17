@@ -1,0 +1,80 @@
+{
+  "resolves": [
+    {
+      "rootPackageName": "ftp",
+      "modulePath": ".",
+      "packagePath": "D:\\2025_02\\ftp\\cangjieFTP\\src\\auth",
+      "fullName": "ftp.auth",
+      "isMacroPackage": false,
+      "output-type": "static",
+      "compile-option": "",
+      "native-compile-option": "",
+      "customized-option": {},
+      "link-option": "",
+      "native-link-option": "",
+      "requires": [],
+      "c_libs": {},
+      "isTestPkg": false,
+      "accessLevel": "public"
+    },
+    {
+      "rootPackageName": "ftp",
+      "modulePath": ".",
+      "packagePath": "D:\\2025_02\\ftp\\cangjieFTP\\src\\handler",
+      "fullName": "ftp.handler",
+      "isMacroPackage": false,
+      "output-type": "static",
+      "compile-option": "",
+      "native-compile-option": "",
+      "customized-option": {},
+      "link-option": "",
+      "native-link-option": "",
+      "requires": [],
+      "c_libs": {},
+      "isTestPkg": false,
+      "accessLevel": "public"
+    },
+    {
+      "rootPackageName": "ftp",
+      "modulePath": ".",
+      "packagePath": "D:\\2025_02\\ftp\\cangjieFTP\\src\\server",
+      "fullName": "ftp.server",
+      "isMacroPackage": false,
+      "output-type": "static",
+      "compile-option": "",
+      "native-compile-option": "",
+      "customized-option": {},
+      "link-option": "",
+      "native-link-option": "",
+      "requires": [
+        "ftp.auth",
+        "ftp.handler"
+      ],
+      "c_libs": {},
+      "isTestPkg": false,
+      "accessLevel": "public"
+    },
+    {
+      "rootPackageName": "ftp",
+      "modulePath": ".",
+      "packagePath": "D:\\2025_02\\ftp\\cangjieFTP\\src",
+      "fullName": "ftp",
+      "isMacroPackage": false,
+      "output-type": "executable",
+      "compile-option": "",
+      "native-compile-option": "",
+      "customized-option": {},
+      "link-option": "",
+      "native-link-option": "",
+      "requires": [
+        "ftp.auth",
+        "ftp.server"
+      ],
+      "c_libs": {},
+      "isTestPkg": false,
+      "accessLevel": "public"
+    }
+  ],
+  "binDeps": {},
+  "crossBinDeps": {}
+}

@@ -1,0 +1,3 @@
+Permission to view this content is exclusively for user2. 
+This passage is designed to test the access rights of user2. 
+It contains confidential data intended for individuals who have been granted user2 privileges.

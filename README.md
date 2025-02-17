@@ -1,292 +1,235 @@
-## 说明
+## 简易FTP服务器
 
-目录结构：
-- cangjie-ftp：使用仓颉编程语言开发的ftp服务端
-    - 已完成：
-        - ls、cd、pwd、quit、get、put、权限控制
-    - 未完成：
-        - 并发
-- python-ftp：使用python开发的ftp服务器，已**全部**完成
-- client：与cangjie-ftp配套的客户端程序，采用C语言编写
+> [!IMPORTANT]
+>
+> - 该项目全部使用Cangjie编程语言进行开发，设计思路参考[MinimalFTP](https://github.com/Guichaguri/MinimalFTP)，原项目采用Java进行开发，本项目采取的木兰开源协议与MinimalFTP采用的Apache-2.0相兼容。
+>
+> - 本项目于2025.2.14日起，推翻原先设计重新编写，以便更好地兼容市面上主流的FTP客户端软件。
+> - 演示视频可参考项目根目录下[演示视频](./演示视频.mp4)
+> - 本文档仅介绍功能，更加详细的设计实现请参考项目开发文档
 
-注：
+项目测试环境：
 
-- client中的程序参照：https://blog.csdn.net/HermanIu/article/details/134107201 ，只是进行了少量修改。cangjie-ftp的实现思路以及基本方法也是参考本教程，同时结合仓颉语言的特性进行代码实现工作。
+- 服务端：openEuler操作系统
+- 客户端：Ubuntu操作系统
+- 两台机器均为云服务器且Ubuntu自带FTP客户端软件
 
-- 目前cangjie-ftp并不支持同一IP未断开原有连接就进行新的连接，且并不支持ftp实现标准，只是一个简易的ftp服务端程序。
+## 🚀功能
 
-python-ftp的介绍请参考 `python-ftp` 目录下的 `README` 或者 `作品简介`
+目前该简易FTP服务器采用主动连接的工作方式且支持以下FTP常用命令：
 
-下面主要介绍一下 `cangjie-ftp` 服务端程序的功能，更加详细设计实现说明请参考 FTP服务器开发文档
+- USER：输入用户名
+- PASS：输入用户密码
+- QUIT：退出用户登录
+- PORT：指定数据连接端口
+- NLST：列出当前目录下的文件（Windows上FTP客户端适用）
+- LIST：列出当前目录下的文件（UNIX系统中使用）
+- XPWD：显示当前工作路径（Windows上客户端适用）
+- STOR：上传文件
+- CWD：更改服务上的工作目录
+- RETR：下载文件
+- 更多常用命令持续添加中......
 
-## 仓颉FTP服务器
+## 🛰软件实现
 
-我们使用仓颉编程语言实现了FTP常见的几个命令工具，`ls`、`pwd`、`cd`、`get`以及`put`
+**端口监听功能：**
 
-### 运行ftp服务器
-
-根目录以及`cangjie-ftp`目录下都已经提供脚本安装`cangjie`工具链，请注意使用`source run-ftp.sh`运行脚本，否则将导致环境变量设置无法生效。
-
-```bash
-#!/bin/bash  
-
-# 定义下载地址和文件名  
-DOWNLOAD_URL="https://cangjie-lang.cn/v1/files/auth/downLoad?nsId=142267&fileName=Cangjie-0.53.13-linux_x64.tar.gz&objectKey=6719f1eb3af6947e3c6af327"  
-FILE_NAME="Cangjie-0.53.13-linux_x64.tar.gz"
-
-# 检查 cangjie 工具链是否已安装
-
-echo "确保 cangjie 工具链已安装..."  
-if ! command -v cjc -v &> /dev/null  
-then  
-    echo "cangjie工具链 未安装，尝试进行安装..."  
-    # 下载文件  
-    echo "Downloading Cangjie compiler..."  
-    curl -L -o "$FILE_NAME" "$DOWNLOAD_URL"
-
-    # 检查下载是否成功  
-    if [ $? -eq 0 ]; then  
-        echo "Download completed successfully."  
-    else  
-        echo "Download failed."  
-        exit 1  
-    fi
-
-    # 解压文件  
-    echo "Extracting $FILE_NAME..."  
-    tar -xvf "$FILE_NAME"  
-
-    # 检查解压是否成功  
-    if [ $? -eq 0 ]; then  
-        echo "Extraction completed successfully."  
-    else  
-        echo "Extraction failed."  
-        exit 1  
-    fi
-
-    # 检查 envsetup.sh 是否存在并进行 source  
-    if [[ -f "cangjie/envsetup.sh" ]]; then
-    	echo "envsetup.sh found!"  
-        source cangjie/envsetup.sh  
-    else  
-        echo "envsetup.sh not found!"  
-        exit 1  
-    fi
-
-fi
-
-# 检查 /ftp_data 目录以及 user1 和 user2 子目录
-echo "检查 /ftp_data 目录及子目录..."
-if [ ! -d "/ftp_data" ]; then
-    echo "/ftp_data 目录不存在，正在创建..."
-    mkdir -p /ftp_data
-fi
-
-# 检查 user1 和 user2 子目录
-for dir in user1 user2; do
-    if [ ! -d "/ftp_data/$dir" ]; then
-        echo "/ftp_data/$dir 目录不存在，正在创建..."
-        mkdir "/ftp_data/$dir"
-    fi
-done
-
-# 编译ftp_server
-cjc ./cangjie-ftp/ftp_server.cj -o ftp_server
-
-echo "正在启动ftp服务器..."
-
-# 启动执行
-./ftp_server
-```
-
-### ls
-
-`ls` 用以列出所在目录下的文件以及目录
-
-![](./asset/ls.png)
-
-核心代码：
+关键代码：
 
 ```cangjie
-let info = currentDir().fileList()
-var files: String = ""
-for (file in info) {
-    files += file.path.fileName.toString() + "\n"
-}
-client.write(("0" + files + '\0').toArray())
+// 服务端套接字
+private var serverSocket: TcpServerSocket = TcpServerSocket(bindAt: 21)
+
+public func listen() {
+        // 创建服务器套接字
+        // 持续接受连接以不断更新状态
+        // 设置backlog大小为50
+        serverSocket.backlogSize = 50
+        serverSocket.bind()
+        // 检查连接是否关闭
+        while (!serverSocket.isClosed()) {
+            update()
+        }
+    }
 ```
 
-通过cangjie为我们提供的获取当前所在工作目录以及目录下文件的功能即可实现。
+利用仓颉为我们提供的`TcpServerSocket`，很容易就可以创建出一个采用TCP的服务端套接字。同时不断更新连接，从而实现端口的监听。
 
-### cd
+**文件上传功能：**主要是PORT和STOR的联合使用。
 
-`cd`指令帮助我们进行工作目录的切换
-
-![](./asset/cd.png)
-
-核心代码：
+关键代码：
 
 ```cangjie
-// 更改当前工作路径
-let dir = getDestDir(String(cmd))
-chdir(dir)
-client.write(("0change the dictory" + "\0").toArray())
-```
-
-只需获取命令中的路径将其设置为当前工作目录即可实现该功能
-
-### pwd
-
-`pwd`用以获知当前所在工作目录
-
-![](./asset/pwd.png)
-
-核心代码：
-
-```cangjie
-// 获取当前路径
-let path = currentDir().info.path.toString()
-client.write(("0" + path + '\0').toArray())
-```
-
-同样可以使用cangjie已经为我们封装好的方法直接获取。
-
-### get
-
-`get`命令用以拉取文件将其下载到客户端本地
-
-![](./asset/get.png)
-
-查看效果：
-
-![](./asset/get2.png)
-
-上述文件已被下载到本地。
-
-![](./asset/get3.png)
-
-文件内容也被正确传输下载下来
-
-核心代码：
-
-```cangjie
-// 首先判断文件是否存在
-let path: Path = Path(getDestDir(String(cmd)))
-println(path)
-let exists = File.exists(path)
-if (exists) {
-    // 文件存在，读取文件到dataBuf中
-    let dataBuf = Array<Byte>(4096, item: 0)
-    msg.fileFlag = 1
-    // 以只读模式打开文件
-    var file: File = File(path, OpenOption.Open(true, false))
-    file.seek(SeekPosition.Begin(0))
-    file.read(dataBuf)
-    file.close()
-    client.write((String.fromUtf8(msg.fileFlag) + String.fromUtf8(msg.cmd) + String.fromUtf8(dataBuf)).toArray())
-} else {
-    client.write("0file does not exist!\0".toArray())
+// 处理STOR指令，用以上传文件到服务器
+private func stor(path: String) {
+    if (!server.getAuthenticator().writePerm(username, currentDir)) {
+        sendResponse(552, "Permission denied...")
+        return
+    }
+    sendResponse(150, "Receiving a file...")
+    if (File.exists(currentDir.join(path))) {
+        // 文件存在，进行覆盖操作
+        File.delete(currentDir.join(path))
+    }
+    File.create(currentDir.join(path))
+    try {
+        receiveData(currentDir.join(path))
+        sendResponse(226, "file received...")
+    } catch (e: Exception) {
+        sendResponse(999, e.message)
+    }
 }
 ```
 
-主要逻辑就是首先判断文件是否存在，将其写入`socket`，客户端在另一端接收到数据后解析创建并写入本地文件即可。
+基本思路为首先判断用户是否在该目录下具有上传文件的权限，而后如果具有权限为写操作做准备，存在同名文件则进行覆盖。
 
-### put
+**文件下载功能：**主要是PORT和RETR的联合使用。
 
-`put`用以上传文件到服务器
-
-![](./asset/put.png)
-
-查看效果：
-
-![](./asset/put2.png)
-
-相关文件`client.c`已被上传到服务器。
-
-核心代码：
+关键代码：
 
 ```cangjie
-// 首先判断文件是否存在
-let path = getDestDir(String(cmd))
-let exists = File.exists(path)
-if (exists) {
-    // 文件存在，先将其删除
-    File.delete(path)
+// 处理RETR指令，用以从服务器下载文件
+private func retr(path: String) {
+    if (File.exists(currentDir.join(path))) {
+        // 进行权限验证，判断是否具有读和下载的权限
+        if (!server.getAuthenticator().readPerm(username, currentDir.join(path))) {
+            sendResponse(552, "Permission denied...")
+            return
+        }
+        sendResponse(150, "Sending the file...")
+        try {
+            let file = File.openRead(currentDir.join(path))
+            let bytes = file.readToEnd()
+            sendData(bytes)
+            sendResponse(226, "File send...")
+        } catch (e: Exception) {
+            sendResponse(999, e.message)
+        }
+        return
+    }
+    sendResponse(550, "Not a valid file...")
 }
-var file: File = File(path, OpenOption.Create(false))
-if (File.exists(path)) {
-    println("The file ${path} is created successfully in current directory.\n")
-}
-let bytes: Array<Byte> = msg.contentBuf
-file.write(bytes)
-file.close()
 ```
 
-基本逻辑为首先判断文件是否存在，存在则将其删除，之后读取连接管道中的客户端传送来的文件数据并将其在服务器端创建文件并写入内容即可。
+基本思路为首先判断是否当前目录存在该文件，存在后进行权限验证，判断该用户是否具有读取和下载的权限，如果具有权限通过主动模式进行数据的传送即可。
 
-### 权限控制
+**多会话并发功能**
 
-![](./asset/control1.png)
-
-客户端匿名用户登录无需用户名和密码参数，否则需要提供用户名和密码作为参数。
-
-以user2为例
-
-![](./asset/control2.png)
-
-user2目录下可进行上传操作。
-
-![](./asset/control3.png)
-
-切换目录到user1下，发现既不可以查看也不可以下载上传，操作受限。
-
-核心代码：
+关键代码：
 
 ```cangjie
-// 用以权限验证的类
-struct User {  
-    var username: String  
-    var password: String
+let thread = spawn {
+    =>
+    while (!client.isClosed()) {
+        // 持续更新连接状态
+        try {
+            update()
+        } catch (e: SocketException) {
+            println("Connection closed by the remote host...")
+            close()
+        }
+    }
+    try {
+        client.close()
+    } catch (e: Exception) {
+        println("An Exception happen!")
+    }
+}
+```
 
-    public init(username:String, password:String) {
+核心思想为与一个客户端建立FTP连接就单独创建一个线程进行连接的处理，以此实现多会话的并发操作。同时借助于仓颉的并发功能，我们还可以通过`synchronized`等关键字实现并发控制。
+
+**匿名账户和普通用户登录功能**：主要是USER和PASS的联合使用
+
+关键代码：
+
+```cangjie
+// 处理USER指令
+private func user(username: String) {
+    // 已验证身份
+    if (connnectHandler.isAuthenticated()) {
+        sendResponse(230, "Logged in...")
+        return
+    }
+
+    // 获取身份认证器实例进行验证
+    let auth = server.getAuthenticator()
+    if (auth.needsPassword(username)) {
         this.username = username
-        this.password = password
-    }  
-    // 用以根据用户名设置工作目录，请确保下面几个目录存在于计算机上
-    public func setDir() {
-        if (username == "user1") {
-            chdir("/ftp_data")
-        } else if (username == "user2") {
-            chdir("/ftp_data/user2")
+        sendResponse(331, "Needs a password...")
+    } else {
+        if (auth.authenticate(username, "")) {
+            this.username = username
+            connnectHandler.setAuthenticated()
+            sendResponse(230, "Logged in...")
         } else {
-            chdir("/ftp_data/user1")
+            sendResponse(530, "Authentication failed...")
+            close()
         }
+    }
+}
+
+// 处理PASS指令
+private func pass(password: String) {
+    if (connnectHandler.isAuthenticated()) {
+        sendResponse(230, "Logged in...")
     }
 
-    // 用户查看下载权限控制
-    public func download() {
-        // 进行用户权限的判断
-        if (username == "anonymous" && !currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user1")) {
-            // 匿名用户无权查看user2目录下内容
-            return false
-        } else if (username == "user2" && !currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user2")) {
-            // user2无权查看这些目录下的文件
-            return false
-        }
-        return true
+    // 进行身份验证
+    let auth = server.getAuthenticator()
+    if (auth.authenticate(username, password)) {
+        connnectHandler.setAuthenticated()
+        sendResponse(230, "Logged in...")
+    } else {
+        sendResponse(530, "Authentication failed...")
+        close()
     }
-
-    // 用户上传权限控制
-    public func upload() {
-        if (username == "user1" && currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user1")) {
-            return true
-        } else if (username == "user2" && currentDir().info.path.toCanonical().toString().startsWith("/ftp_data/user2")) {
-            // user2无权查看这些目录下的文件
-            return true
-        }
-        return false
-    }
-}  
+}
 ```
 
-使用结构体并在其中定义用户上传以及下载的权限控制方法，具体实现为获取绝对路径，判断是否对该路径下的文件具有相应权限。
+基本思路首先处理USER命令，如果不是匿名用户则发送响应提示用户需要密码，再处理PASS命令进行身份的校验即可。
+
+**账户权限控制功能**
+
+核心代码：
+
+```cangjie
+// 添加文件权限
+public func addPermission(username: String, filepath: Path, read: Bool, write: Bool) {
+    permList.append(Permission(username, filepath, read, write))
+}
+
+// 添加文件权限
+public func addPermission(username: String, filepath: Path) {
+    permList.append(Permission(username, filepath))
+}
+
+// 获取文件读权限
+public func readPerm(username: String, filepath: Path) {
+    for (perm in permList) {
+        // 查找到相匹配的
+        // 根据目录递归匹配，所以这里直接看绝对路径是否呈现出包含关系
+        if (perm.username == username && filepath.toCanonical().toString().startsWith(perm.filepath.toCanonical().toString())) {
+            return perm.read
+        }
+    }
+    // 查找不到一律返回false
+    return false
+}
+
+
+// 获取文件写权限
+public func writePerm(username: String, filepath: Path) {
+    for (perm in permList) {
+        // 同理
+        if (perm.username == username && filepath.toCanonical().toString().startsWith(perm.filepath.toCanonical().toString())) {
+            return perm.write
+        }
+    }
+    // 查找不到一律返回false
+    return false
+}
+
+```
+
+初始化FTP服务器时为特定的用户添加特定文件的权限，需要进行权限验证的场景例如上传和下载时，首先查找是否记录有该权限条目，存在则返回记录的权限，没有的默认返回无权限。

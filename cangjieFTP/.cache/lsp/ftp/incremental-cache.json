@@ -1,0 +1,30 @@
+{
+  "packageInformation": {
+    "ftp": {
+      "rootPackageName": "ftp",
+      "fileNameHash": "-6701969392183779182",
+      "timeStamp": 1739360816,
+      "buildFlag": true,
+      "exeName": "main",
+      "hasSubPkgs": true
+    },
+    "ftp.auth": {
+      "rootPackageName": "ftp",
+      "fileNameHash": "652735117924998960",
+      "timeStamp": 1739286189,
+      "buildFlag": true,
+      "exeName": "",
+      "hasSubPkgs": false
+    },
+    "ftp.server": {
+      "rootPackageName": "ftp",
+      "fileNameHash": "-4795699704726809959",
+      "timeStamp": 1739362139,
+      "buildFlag": true,
+      "exeName": "",
+      "hasSubPkgs": false
+    }
+  },
+  "jsonHash": "2705456354288073285",
+  "rootPackageName": "ftp"
+}

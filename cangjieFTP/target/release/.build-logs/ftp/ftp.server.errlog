@@ -1,0 +1,33 @@
+[33mwarning[0m: unused variable:'connection'
+ [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\listener.cj:5:29:
+  [36m| [0m
+[36m5[0m [36m| [0m    public func onConnected(connection: FTPConnection) {[0m
+  [36m| [0m                            [33m^^^^^^^^^^ unused variable[0m
+  [36m| [0m
+  [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused variable:'connection'
+ [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\listener.cj:9:32:
+  [36m| [0m
+[36m9[0m [36m| [0m    public func onDisconnected(connection: FTPConnection) {[0m
+  [36m| [0m                               [33m^^^^^^^^^^ unused variable[0m
+  [36m| [0m
+  [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused variable:'args'
+   [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\connect.cj:318:23:
+    [36m| [0m
+[36m318[0m [36m| [0m    private func nlst(args: String) {[0m
+    [36m| [0m                      [33m^^^^ unused variable[0m
+    [36m| [0m
+    [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+[33mwarning[0m: unused variable:'auth'
+   [36m==>[0m D:\2025_02\ftp\cangjieFTP\src\server\connect.cj:320:13:
+    [36m| [0m
+[36m320[0m [36m| [0m        let auth = server.getAuthenticator()[0m
+    [36m| [0m            [33m^^^^ unused variable[0m
+    [36m| [0m
+    [36m#[0m [0mnote[0m: this warning can be suppressed by setting the compiler option `-Woff unused`
+
+4 warnings generated, 4 warnings printed.

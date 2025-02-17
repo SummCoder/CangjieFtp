@@ -1,0 +1,3 @@
+Access to this document is granted for user1. 
+This text serves as a sample to verify the authorization level of user1. 
+It includes sensitive information that should only be visible to authorized personnel with user1 credentials.
