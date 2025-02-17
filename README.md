@@ -18,6 +18,13 @@
 
 项目根目录下提供了一键安装启动脚本，但请注意，为了确保环境变量生效，❗❗❗**请使用**`source run-ftp.sh`启动项目。
 
+脚本功能包括：
+
+- 检查 `cangjie` 工具链是否已安装
+- 检查 `openEuler` 防火墙状态
+- 编译 `FTP` 服务器项目
+- 运行 `FTP` 服务器项目
+
 ## 🚀功能
 
 目前该简易FTP服务器采用主动连接的工作方式且支持以下FTP常用命令：
@@ -38,6 +45,8 @@
 
 ❗❗❗测试下列功能时请使用两台拥有公网IP的云服务器或者将服务端与客户端起在同一台主机上。可能是由于暂未支持被动模式，本人本地电脑作为客户端，云服务器作为服务器端，测试时上传下载一直处于尝试连接状态，请注意。
 
+![效果图](.\asset\效果图)
+
 **端口监听功能：**
 
 关键代码：
@@ -47,16 +56,16 @@
 private var serverSocket: TcpServerSocket = TcpServerSocket(bindAt: 21)
 
 public func listen() {
-        // 创建服务器套接字
-        // 持续接受连接以不断更新状态
-        // 设置backlog大小为50
-        serverSocket.backlogSize = 50
-        serverSocket.bind()
-        // 检查连接是否关闭
-        while (!serverSocket.isClosed()) {
-            update()
-        }
+    // 创建服务器套接字
+    // 持续接受连接以不断更新状态
+    // 设置backlog大小为50
+    serverSocket.backlogSize = 50
+    serverSocket.bind()
+    // 检查连接是否关闭
+    while (!serverSocket.isClosed()) {
+        update()
     }
+}
 ```
 
 利用仓颉为我们提供的`TcpServerSocket`，很容易就可以创建出一个采用TCP的服务端套接字。同时不断更新连接，从而实现端口的监听。
