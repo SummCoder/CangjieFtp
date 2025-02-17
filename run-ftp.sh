@@ -45,6 +45,17 @@ then
 
 fi
 
+# 检查 openEuler 防火墙状态
+echo "检查 openEuler 防火墙状态..."
+if systemctl status firewalld | grep "active (running)" &> /dev/null; then
+  echo "防火墙已开启，尝试开放 21 端口..."
+  firewall-cmd --zone=public --add-port=21/tcp --permanent
+  firewall-cmd --reload
+  echo "21 端口已开放。"
+else
+  echo "防火墙未开启，无需开放端口。"
+fi
+
 # 切换到 cangjieFTP 目录
 cd cangjieFTP || { echo "cangjieFTP 目录不存在"; exit 1; }
 
